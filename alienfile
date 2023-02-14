@@ -29,7 +29,7 @@ share {
     sub {
       my ($build) = @_;
       $ENV{CARGO_HOME}  = $build->install_prop->{prefix};
-      $ENV{RUSTUP_HOME} = Path::Tiny->cwd->child('rustup-home');
+      $ENV{RUSTUP_HOME} = $ENV{ALIEN_RUST_RUSTUP_HOME} || Path::Tiny->cwd->child('rustup-home');
       $build->log( "CARGO_HOME  = $ENV{CARGO_HOME}");
       $build->log( "RUSTUP_HOME = $ENV{RUSTUP_HOME}");
     },
