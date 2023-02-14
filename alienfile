@@ -49,4 +49,9 @@ share {
       }) if -f $env;
     },
   ];
+
+  gather sub {
+     my ($build) = @_;
+     $build->runtime_prop->{'version'} = ( `rustc --version` =~ qr/^rustc ([0-9\.]+)/)[0];
+  };
 }
