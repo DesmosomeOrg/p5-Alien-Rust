@@ -1,5 +1,7 @@
 use alienfile;
 
+use Path::Tiny qw( path );
+
 plugin 'Probe::CommandLine' => (
   command => 'rustc',
   args    => [ '--version' ],
@@ -35,6 +37,16 @@ share {
       qw(--verbose -y),
       qw(--no-modify-path),
       qw(--profile default),
-    ]
+    ],
+    sub {
+      my ($build) = @_;
+      my $from = $build->install_prop->{prefix};
+      my $to   = $build->runtime_prop->{prefix};
+      $build->log( "Changing contents of env file: $from -> $to");
+      my $env = path($from)->child('env');
+      $env->edit_utf8(sub {
+        s/\Q$from\E/$to/g;
+      }) if -f $env;
+    },
   ];
 }
