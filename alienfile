@@ -1,17 +1,40 @@
 use alienfile;
 
-# replace this with your own system probe.
-# See Alien::Build::Plugin::Probe and
-# Alien::Build::Plugin::PkgConfig for common
-# probe plugins.
-probe sub { 'share' };
+plugin 'Probe::CommandLine' => (
+  command => 'rustc',
+  args    => [ '--version' ],
+  match   => qr/^rustc ([0-9\.]+)/,
+  version => qr/^rustc ([0-9\.]+)/,
+);
 
 share {
-  start_url 'https://static.rust-lang.org/dist';
-  plugin Download => (
-    filter  => qr/^rustc.*tar\.gz$/,
-    version => qr/([0-9\.]+)/,
-  );
-  plugin Extract => 'tar.gz';
-  plugin 'Gather::IsolateDynamic';
+  my $rustup;
+  if( $^O ne 'MSWin32' ) {
+    $rustup = {
+      url => 'https://static.rust-lang.org/rustup/rustup-init.sh',
+      exe => [ qw(sh ./rustup-init.sh) ],
+    }
+  } else {
+    $rustup = {
+      url => 'https://static.rust-lang.org/rustup/dist/i686-pc-windows-gnu/rustup-init.exe',
+      exe => [ qw(.\\rustup-init.exe) ],
+    };
+  }
+  start_url $rustup->{url};
+  plugin 'Download';
+  plugin 'Extract::File';
+  build [
+    sub {
+      my ($build) = @_;
+      $ENV{CARGO_HOME}  = $build->install_prop->{prefix};
+      $ENV{RUSTUP_HOME} = Path::Tiny->cwd->child('rustup-home');
+      $build->log( "CARGO_HOME  = $ENV{CARGO_HOME}");
+      $build->log( "RUSTUP_HOME = $ENV{RUSTUP_HOME}");
+    },
+    [ @{ $rustup->{exe} },
+      qw(--verbose -y),
+      qw(--no-modify-path),
+      qw(--profile default),
+    ]
+  ];
 }

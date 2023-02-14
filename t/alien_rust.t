@@ -6,8 +6,8 @@ use Alien::Rust;
 alien_diag 'Alien::Rust';
 alien_ok 'Alien::Rust';
 
-# run_ok([ ... ])
-#   ->success
-#   ->out_like(qr/ ... /);
+ run_ok([ qw(rustc --version) ])
+   ->success
+   ->out_like(qr/^rustc ([0-9\.]+)/);
 
 done_testing;
