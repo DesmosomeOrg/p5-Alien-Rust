@@ -18,4 +18,8 @@ if( Alien::Rust->install_type eq 'share' ) {
    ->success
    ->out_like(qr/^rustc ([0-9\.]+)/);
 
+ run_ok([ qw(cargo --version) ])
+   ->success
+   ->out_like(qr/^cargo [0-9\.]+/);
+
 done_testing;
