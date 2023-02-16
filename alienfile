@@ -9,6 +9,13 @@ plugin 'Probe::CommandLine' => (
   version => qr/^rustc ([0-9\.]+)/,
 );
 
+plugin 'Probe::CommandLine' => (
+  command   => 'cargo',
+  args      => [ '--version' ],
+  match     => qr/^cargo [0-9\.]+/,
+  secondary => 1,
+);
+
 share {
   my $rustup;
   if( $^O ne 'MSWin32' ) {
