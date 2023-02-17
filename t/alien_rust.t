@@ -4,15 +4,25 @@ use Test::Alien::Diag;
 use Alien::Rust;
 
 use Path::Tiny qw( path );
+use Env qw($RUSTUP_HOME);
 
 alien_diag 'Alien::Rust';
 alien_ok 'Alien::Rust';
 
-use Env qw(RUSTUP_HOME);
+if(Alien::Rust->needs_rustup_home) {
+  $RUSTUP_HOME = Alien::Rust->rustup_home;
 
-if( Alien::Rust->install_type eq 'share' ) {
-  $RUSTUP_HOME = path(Alien::Rust->dist_dir)->child('.rustup');
+  if( Alien::Rust->install_type eq 'share' ) {
+    my $rustup_home = path($RUSTUP_HOME);
+    my $from_prefix = path(Alien::Rust->runtime_prop->{prefix});
+    my $to_prefix   = path(Alien::Rust->dist_dir);
+    if( $from_prefix->subsumes( $rustup_home ) ) {
+      $RUSTUP_HOME = $rustup_home->relative( $from_prefix )->absolute($to_prefix)->stringify;
+    }
+  }
 }
+
+diag "RUSTUP_HOME = $RUSTUP_HOME";
 
  run_ok([ qw(rustc --version) ])
    ->success
