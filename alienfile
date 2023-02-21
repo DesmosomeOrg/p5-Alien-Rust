@@ -1,6 +1,7 @@
 use alienfile;
 
 use Path::Tiny qw( path );
+use File::Which qw( which );
 
 plugin 'Probe::CommandLine' => (
   command => 'rustc',
@@ -15,6 +16,22 @@ plugin 'Probe::CommandLine' => (
   match     => qr/^cargo [0-9\.]+/,
   secondary => 1,
 );
+
+sys {
+  gather sub {
+    my ($build) = @_;
+    if( which('rustup') ) {
+      # assume that rustup was used
+      _gather_rustup_prop($build);
+    }
+  };
+};
+
+sub _gather_rustup_prop {
+  my ($build) = @_;
+  $build->runtime_prop->{'_using_rustup'} = 1;
+  $build->runtime_prop->{'rustup_home'}  = (`rustup show`  =~ qr/^rustup home:\s+(.*)$/m )[0];
+}
 
 share {
   my $rustup;
@@ -60,5 +77,15 @@ share {
   gather sub {
      my ($build) = @_;
      $build->runtime_prop->{'version'} = ( `rustc --version` =~ qr/^rustc ([0-9\.]+)/)[0];
+
+      _gather_rustup_prop($build);
+      my $rustup_home = path($build->runtime_prop->{rustup_home});
+      my $from_prefix = path($build->install_prop->{prefix});
+      my $to_prefix   = path($build->runtime_prop->{prefix});
+      if( $from_prefix->subsumes( $rustup_home )  ) {
+        $build->runtime_prop->{rustup_home} = $rustup_home
+          ->relative( $from_prefix )
+          ->absolute( $to_prefix )->stringify;
+      }
   };
 }
