@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}},
 
 {{$NEXT}}
+
+0.03      2023-02-20 23:41:50-05:00 America/New_York
   - Add methods for setting RUSTUP_HOME environment variable if necessary.
     GH#2, GH#3.
 
